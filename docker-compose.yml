@@ -1,0 +1,25 @@
+services:
+  # Go REST Backend Service
+  go-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - sqlite-data:/app/db
+
+  # Python AI Analytics Service
+  python-analytics:
+    build:
+      context: ./analytics
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - sqlite-data:/app/db
+    depends_on:
+      - go-backend
+
+volumes:
+  sqlite-data:
