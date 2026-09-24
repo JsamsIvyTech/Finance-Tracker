@@ -1,0 +1,16 @@
+services:
+  # Go REST Backend Web Service
+  - type: web
+    name: finance-go-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+
+  # Python AI Analytics Web Service
+  - type: web
+    name: finance-python-analytics
+    env: docker
+    dockerfilePath: analytics/Dockerfile
+    dockerContext: analytics
+    plan: free
