@@ -6,15 +6,7 @@ import '../models/transaction.dart';
 
 class ApiService {
   // Automatically switches base URL depending on device/emulator
-  static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:8080/api';
-    } else if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:8080/api'; // Android Emulator alias for PC localhost
-    } else {
-      return 'http://localhost:8080/api';
-    }
-  }
+  static String get baseUrl => 'https://finance-go-backend.onrender.com/api//register';
 
   // Register user
   static Future<Map<String, dynamic>> register(String username, String password) async {
@@ -89,15 +81,7 @@ class ApiService {
   }
 
   // Python analytics service base url
-  static String get analyticsBaseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:5000/api/analytics';
-    } else if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:5000/api/analytics'; // Android Emu
-    } else {
-      return 'http://localhost:5000/api/analytics';
-    }
-  }
+  static String get analyticsBaseUrl => 'https://finance-python-analytics.onrender.com/api/analytics';
 
   // fetch python analytics
   static Future<Map<String, dynamic>> fetchAnalytics(String userId) async {
