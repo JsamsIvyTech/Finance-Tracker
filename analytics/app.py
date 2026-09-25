@@ -3,22 +3,45 @@ from flask_cors import CORS
 import sqlite3
 import os
 import re
+import urllib.request
+import json
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app) # Enable CORS
 
-# Path to DB
-# Replace line 13 in analytics/app.py with this:
-if os.path.exists('/app/db'):
-    DB_PATH = '/app/db/finance.db'
-else:
-    DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'backend', 'finance.db')
+# Go Backend Base URL for cloud deployment fallback
+GO_BACKEND_URL = os.getenv('GO_BACKEND_URL', 'https://finance-go-backend.onrender.com/api')
 
-def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+# Local DB Path
+DB_PATH = '/app/db/finance.db' if os.path.exists('/app/db/finance.db') else os.path.join(os.path.dirname(__file__), '..', 'backend', 'finance.db')
+
+def fetch_user_transactions(user_id):
+    """Fetches user transactions from local SQLite if available, otherwise over HTTP from Go API."""
+    if os.path.exists(DB_PATH):
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, title, amount, date FROM transactions WHERE user_id = ?", (user_id,))
+            rows = [dict(row) for row in cursor.fetchall()]
+            conn.close()
+            return rows
+        except Exception as e:
+            print(f"SQLite read error: {e}")
+
+    # Fallback to Go REST API over HTTP for Render Cloud Deployment
+    try:
+        url = f"{GO_BACKEND_URL}/transactions?userId={user_id}"
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req, timeout=10) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode())
+                return data
+    except Exception as e:
+        print(f"HTTP fallback error fetching from Go backend: {e}")
+
+    return []
 
 # Smart Date Parser Function
 def extract_date_from_text(text_lower):
@@ -58,7 +81,6 @@ def extract_date_from_text(text_lower):
 
     for month_name, month_num in month_names.items():
         if month_name in text_lower:
-            # Look for day number near month name
             day_match = re.search(r'\b(\d{1,2})(st|nd|rd|th)?\b', text_lower)
             day_val = int(day_match.group(1)) if day_match and int(day_match.group(1)) <= 31 else 1
             year_val = now.year if month_num <= now.month else now.year - 1
@@ -106,16 +128,12 @@ def detect_recurring():
     if not user_id:
         return jsonify({"error": "userId is required"}), 400
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, title, amount, date FROM transactions WHERE user_id = ?", (user_id,))
-    rows = cursor.fetchall()
-    conn.close()
+    rows = fetch_user_transactions(user_id)
 
     title_summary = {}
     for row in rows:
-        title = row['title'].strip().title()
-        amount = row['amount']
+        title = str(row['title']).strip().title()
+        amount = float(row['amount'])
 
         if title not in title_summary:
             title_summary[title] = {"count": 0, "total_amount": 0.0, "last_amount": amount}
@@ -149,11 +167,7 @@ def predict_spending():
     if not user_id:
         return jsonify({"error": "userId is required"}), 400
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT amount, date FROM transactions WHERE user_id = ?", (user_id,))
-    rows = cursor.fetchall()
-    conn.close()
+    rows = fetch_user_transactions(user_id)
 
     if not rows:
         return jsonify({
@@ -163,7 +177,7 @@ def predict_spending():
             "recommendation": "Keep track of your expense daily for accurate forecasts.",
         })
 
-    total_spent = sum(row['amount'] for row in rows)
+    total_spent = sum(float(row['amount']) for row in rows)
     predicted_next_month = round(total_spent * 1.05, 2)
     potential_savings = round(predicted_next_month * 0.15, 2)
 
@@ -185,7 +199,7 @@ def parse_receipt():
 
     text_lower = raw_text.lower()
 
-    # 1. Smart Amount Extraction (prioritizes '$' or decimals like $5.75 or 42.99)
+    # 1. Smart Amount Extraction
     amount = 0.0
     dollar_match = re.search(r'\$\s*(\d+(\.\d{1,2})?)', raw_text)
     decimal_match = re.search(r'\b(\d+\.\d{1,2})\b', raw_text)
@@ -216,21 +230,16 @@ def parse_receipt():
     # 3. Extract Date using Smart Date Parser
     date_obj = extract_date_from_text(text_lower)
 
-    # 4. Clean Merchant Title (strips amounts, dates, month names, and filler/action words)
+    # 4. Clean Merchant Title
     clean_title = raw_text
     if dollar_match:
         clean_title = clean_title.replace(dollar_match.group(0), '')
     elif decimal_match:
         clean_title = clean_title.replace(decimal_match.group(0), '')
 
-    # Strip explicit date patterns like 09/17/2026 or 9/17
     clean_title = re.sub(r'\b(\d{1,2})[/.\-](\d{1,2})(?:[/.\-](\d{2,4}))?\b', '', clean_title)
-
-    # Strip month names and date words
     clean_title = re.sub(r'\b(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)\b', '', clean_title, flags=re.IGNORECASE)
     clean_title = re.sub(r'\b(\d{1,2})(st|nd|rd|th)\b', '', clean_title, flags=re.IGNORECASE)
-
-    # Strip action & filler words (spent, spen, paid, cost, dollars, bucks, in, on, for, i, my)
     clean_title = re.sub(r'\b(yesterday|today|tomorrow|last month|last week|first|beginning|end|days?\s*ago|months?\s*ago|of\s*the\s*month|the\s*month|on\s*the|for|at|in|on|i|my|spen|spent|spend|paid|cost|dollars?|bucks?)\b', '', clean_title, flags=re.IGNORECASE)
 
     clean_title = re.sub(r'\s+', ' ', clean_title).strip()
