@@ -10,6 +10,7 @@ import 'widgets/recurring_card.dart';
 import 'widgets/prediction_card.dart'; // 1. Import PredictionCard
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
