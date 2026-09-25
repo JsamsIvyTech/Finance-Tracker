@@ -1,4 +1,4 @@
-package com.example.firstapp
+package com.jacksams.financetracker
 
 import io.flutter.embedding.android.FlutterActivity
 

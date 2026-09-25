@@ -5,8 +5,8 @@ import 'package:http/http.dart' as http;
 import '../models/transaction.dart';
 
 class ApiService {
-  // Automatically switches base URL depending on device/emulator
-  static String get baseUrl => 'https://finance-go-backend.onrender.com/api//register';
+  // Go REST Backend Cloud Base URL
+  static String get baseUrl => 'https://finance-go-backend.onrender.com/api';
 
   // Register user
   static Future<Map<String, dynamic>> register(String username, String password) async {
