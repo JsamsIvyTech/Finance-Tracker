@@ -185,6 +185,7 @@ class _BasicPageState extends State<BasicPage> {
   void _startAddNewTransaction(BuildContext ctx) {
     showModalBottomSheet(
       context: ctx,
+      isScrollControlled: true, // <--- Allows modal sheet to expand above soft keyboard!
       builder: (_) {
         return NewTransaction(addTx: _addNewTransaction);
       },
@@ -219,21 +220,21 @@ class _BasicPageState extends State<BasicPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        child: Column(
-          children: [
-            SummaryCard(
-              totalSpending: _totalSpending,
-              transactionCount: _userTransactions.length,
+              child: Column(
+                children: [
+                  SummaryCard(
+                    totalSpending: _totalSpending,
+                    transactionCount: _userTransactions.length,
+                  ),
+                  PredictionCard(predictionData: _predictionData),
+                  RecurringCard(analyticsData: _analyticsData),
+                  TransactionList(
+                    transactions: _userTransactions,
+                    deleteTx: _deleteTransaction,
+                  ),
+                ],
+              ),
             ),
-            PredictionCard(predictionData: _predictionData),
-            RecurringCard(analyticsData: _analyticsData),
-            TransactionList(
-              transactions: _userTransactions,
-              deleteTx: _deleteTransaction,
-            ),
-          ],
-        ),
-      ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () => _startAddNewTransaction(context),

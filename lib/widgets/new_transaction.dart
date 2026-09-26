@@ -14,7 +14,7 @@ class NewTransaction extends StatefulWidget {
 class _NewTransactionState extends State<NewTransaction> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
-  final _quickTextController = TextEditingController(); // Controller for AI Quick Fill
+  final _quickTextController = TextEditingController();
   DateTime? _selectedDate;
   bool _isParsing = false;
 
@@ -29,7 +29,6 @@ class _NewTransactionState extends State<NewTransaction> {
   ];
   String _selectedCategory = 'Food';
 
-  // Call Python AI Parser Endpoint
   Future<void> _parseWithAI() async {
     final rawText = _quickTextController.text.trim();
     if (rawText.isEmpty) return;
@@ -111,11 +110,16 @@ class _NewTransactionState extends State<NewTransaction> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 5,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
+    return SingleChildScrollView(
+      child: Card(
+        elevation: 5,
+        child: Container(
+          padding: EdgeInsets.only(
+            top: 16,
+            left: 16,
+            right: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 40,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -140,14 +144,14 @@ class _NewTransactionState extends State<NewTransaction> {
                     _isParsing
                         ? const CircularProgressIndicator()
                         : ElevatedButton.icon(
-                      onPressed: _parseWithAI,
-                      icon: const Icon(Icons.auto_awesome, size: 18),
-                      label: const Text('Parse with Python AI'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
+                            onPressed: _parseWithAI,
+                            icon: const Icon(Icons.auto_awesome, size: 18),
+                            label: const Text('Parse with Python AI'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.purple,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
                   ],
                 ),
               ),
