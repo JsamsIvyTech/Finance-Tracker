@@ -49,7 +49,7 @@ func initDB() {
 	var err error
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
-		log.Println("Warning: DATABASE_URL not set! Defaulting to local dev string if available.")
+		log.Println("Warning: DATABASE_URL not set!")
 	}
 
 	db, err = sql.Open("postgres", connStr)
@@ -96,19 +96,24 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 // --- Auth Handlers ---
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(AuthResponse{Message: "Method not allowed"})
 		return
 	}
 
 	var req AuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(AuthResponse{Message: "Invalid request body"})
 		return
 	}
 
 	if req.Username == "" || req.Password == "" {
-		http.Error(w, "Username and password required", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(AuthResponse{Message: "Username and password required"})
 		return
 	}
 
@@ -124,14 +129,16 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	// Hash password using bcrypt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(AuthResponse{Message: "Failed to hash password"})
 		return
 	}
 
 	userID := fmt.Sprintf("u_%d", time.Now().UnixNano())
 	_, err = db.Exec("INSERT INTO users (id, username, password) VALUES ($1, $2, $3)", userID, req.Username, string(hashedPassword))
 	if err != nil {
-		http.Error(w, "Failed to register user", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(AuthResponse{Message: "Database Error: " + err.Error()})
 		return
 	}
 
@@ -143,14 +150,18 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(AuthResponse{Message: "Method not allowed"})
 		return
 	}
 
 	var req AuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(AuthResponse{Message: "Invalid request body"})
 		return
 	}
 
@@ -180,13 +191,15 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		userID := r.URL.Query().Get("userId")
 		if userID == "" {
-			http.Error(w, "userId query parameter required", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "userId query parameter required"})
 			return
 		}
 
 		rows, err := db.Query("SELECT id, user_id, title, amount, date, category FROM transactions WHERE user_id = $1", userID)
 		if err != nil {
-			http.Error(w, "Failed to query transactions", http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Database query error: " + err.Error()})
 			return
 		}
 		defer rows.Close()
@@ -210,12 +223,14 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		var tx Transaction
 		if err := json.NewDecoder(r.Body).Decode(&tx); err != nil {
-			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
 			return
 		}
 
 		if tx.UserID == "" || tx.Title == "" || tx.Amount <= 0 {
-			http.Error(w, "userId, title, and amount required", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "userId, title, and amount required"})
 			return
 		}
 
@@ -234,7 +249,8 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 			tx.ID, tx.UserID, tx.Title, tx.Amount, tx.Date.Format(time.RFC3339), tx.Category,
 		)
 		if err != nil {
-			http.Error(w, "Failed to save transaction to database", http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Database insert error: " + err.Error()})
 			return
 		}
 
@@ -244,20 +260,23 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		txID := r.URL.Query().Get("id")
 		if txID == "" {
-			http.Error(w, "id query parameter required", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "id query parameter required"})
 			return
 		}
 
 		_, err := db.Exec("DELETE FROM transactions WHERE id = $1", txID)
 		if err != nil {
-			http.Error(w, "Failed to delete transaction", http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Database delete error: " + err.Error()})
 			return
 		}
 
 		json.NewEncoder(w).Encode(map[string]string{"message": "Transaction deleted"})
 
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Method not allowed"})
 	}
 }
 
