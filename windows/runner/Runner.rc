@@ -52,7 +52,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_APP_ICON            ICON                    "resources\\app_icon.ico"
+IDI_APP_ICON            ICON                    "resources\\financetracker.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "firstapp" "\0"
+            VALUE "CompanyName", "com.jacksams" "\0"
+            VALUE "FileDescription", "Finance Tracker" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "firstapp" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
+            VALUE "InternalName", "FinanceTracker" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.jacksams. All rights reserved." "\0"
             VALUE "OriginalFilename", "firstapp.exe" "\0"
-            VALUE "ProductName", "firstapp" "\0"
+            VALUE "ProductName", "Finance Tracker" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
