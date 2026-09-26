@@ -12,11 +12,9 @@ A full-stack, polyglot personal finance tracking application engineered with **F
 
 ## 📸 Screenshots
 
-> *Tip: Place your screenshot image files inside an `assets/screenshots/` folder and update the links below!*
-
-| Dashboard & Summary | AI Subscription Insights | AI Smart Quick-Fill |
-| :---: | :---: | :---: |
-| ![Dashboard](assets/screenshots/dashboard.png) | ![Insights](assets/screenshots/insights.png) | ![Quick Fill](assets/screenshots/quickfill.png) |
+|                   Login                   |                     Home screen                      |                 Add Transaction                 |                  AI Parse                   |                 Example 1                 |                 Example 2                 |  
+|:-----------------------------------------:|:----------------------------------------------------:|:-----------------------------------------------:|:-------------------------------------------:|:-----------------------------------------:|:-----------------------------------------:|
+| ![Login](assets/screenshots/loginapp.png) | ![Home screen](assets/screenshots/homeeeescreen.png) | ![Add Transaction](assets/screenshots/addd.png) | ![AI Parse](assets/screenshots/parseai.png) | ![Example 1](assets/screenshots/exa1.png) | ![Example 2](assets/screenshots/exa2.png) |
 
 ---
 
