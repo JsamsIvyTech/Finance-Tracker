@@ -1,11 +1,11 @@
 # 📊 Finance Tracker - Polyglot AI Personal Finance Platform
 
-A full-stack, polyglot personal finance tracking application engineered with **Flutter** (Mobile/Desktop UI), a high-performance **Go** REST API server, a **Python** AI & analytics microservice, **SQLite** database persistence, and **Docker** container orchestration.
+A full-stack, polyglot personal finance tracking application engineered with **Flutter** (Mobile/Desktop UI), a high-performance **Go** REST API server, a **Python** AI & analytics microservice, **Supabase PostgreSQL** cloud persistence, and **Docker** container orchestration.
 
 ![Flutter](https://img.shields.io/badge/Frontend-Flutter_3.22+-02569B?logo=flutter)
 ![Go](https://img.shields.io/badge/Backend-Go_1.22+-00ADD8?logo=go)
 ![Python](https://img.shields.io/badge/Analytics-Python_3.11+-3776AB?logo=python)
-![Database](https://img.shields.io/badge/Database-SQLite_3-003B57?logo=sqlite)
+![Database](https://img.shields.io/badge/Database-Supabase_PostgreSQL-3ECF8E?logo=supabase)
 ![Docker](https://img.shields.io/badge/DevOps-Docker_Compose-2496ED?logo=docker)
 
 ---
@@ -43,7 +43,7 @@ A full-stack, polyglot personal finance tracking application engineered with **F
 │                                      [database/sql]                       │
 └─────────────────────────────┬───────────────────────────────┬─────────────┘
                               │                               │
-                       SQL CRUD Queries             Reads DB for Analytics
+                      Postgres CRUD Queries          Queries Database for AI
                        (INSERT, SELECT)                       │
                               │                               ▼
                               │            ┌────────────────────────────────┐
@@ -57,9 +57,9 @@ A full-stack, polyglot personal finance tracking application engineered with **F
                               │                             │
                               ▼                             ▼
 ┌───────────────────────────────────────────────────────────────────────────┐
-│                            DATABASE (SQLite)                              │
+│                       DATABASE (Supabase PostgreSQL)                      │
 │                                                                           │
-│                               finance.db                                  │
+│                          db.supabase.co:5432                              │
 └───────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -77,18 +77,16 @@ A full-stack, polyglot personal finance tracking application engineered with **F
 ### ⚡ **Go REST API Server (`:8080`)**
 - **High-Performance Routing**: Built with Go `net/http` and CORS middleware.
 - **Enterprise Security**: Cryptographic password hashing and salting with `golang.org/x/crypto/bcrypt`.
-- **SQLite Database Persistence**: Stores user accounts and transactions in `finance.db` using Go's `database/sql` & `modernc.org/sqlite` pure-Go driver.
+- **24/7 Cloud PostgreSQL Persistence**: Stores user accounts and transactions in Supabase Cloud Postgres using `github.com/lib/pq` driver.
 
 ### 🐍 **Python AI & Analytics Microservice (`:5000`)**
 - **Flask REST Microservice**: Runs on port `5000` with `flask-cors`.
-- **Recurring Subscription Detector**: Analyzes `finance.db` transaction history to identify recurring subscriptions (Netflix, Spotify, Rent, Gym) and calculate total monthly recurring costs.
+- **Recurring Subscription Detector**: Analyzes transaction history to identify recurring subscriptions (Netflix, Spotify, Rent, Gym) and calculate total monthly recurring costs.
 - **Next-Month Spending Predictor**: Linear trend forecasting for next month's spending and AI saving recommendations.
 - **NLP Receipt Parser**: Regular expression & natural language date parser handling explicit dates, relative days (`"yesterday"`, `"3 days ago"`), and ordinal day phrases (`"17th of the month"`, `"first of the month"`).
 
-### 🐳 **DevOps & Production Distribution**
-- **Docker Containerization**: Multi-stage `Dockerfile`s for Go & Python.
-- **Docker Compose Orchestration**: Single-command startup (`docker compose up`) orchestrating both microservices simultaneously.
-- **Multi-Platform Release Builds**: Release-signed Google Play App Bundle (`app-release.aab`), Android Package (`app-release.apk`), and Windows Desktop Executable (`firstapp.exe`).
+### ⏰ **24/7 Keep-Alive Automation**
+- **Zero Cold Starts**: `cron-job.org` pings Go's `/api/health` every 15 minutes, automatically waking up the Python microservice so both servers stay 100% awake 24/7!
 
 ---
 
@@ -97,12 +95,12 @@ A full-stack, polyglot personal finance tracking application engineered with **F
 ### **Go Backend (`http://localhost:8080/api`)**
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/health` | Server health check |
+| `GET` | `/health` | Server health check (Pings Python service) |
 | `POST` | `/register` | User registration with `bcrypt` password hashing |
 | `POST` | `/login` | User authentication |
-| `GET` | `/transactions?userId=...` | Fetch user transactions from SQLite |
-| `POST` | `/transactions` | Save new transaction to SQLite |
-| `DELETE` | `/transactions?id=...` | Delete transaction from SQLite |
+| `GET` | `/transactions?userId=...` | Fetch user transactions from Supabase Postgres |
+| `POST` | `/transactions` | Save new transaction to Supabase Postgres |
+| `DELETE` | `/transactions?id=...` | Delete transaction from Supabase Postgres |
 
 ### **Python AI Microservice (`http://localhost:5000/api/analytics`)**
 | Method | Endpoint | Description |
@@ -116,7 +114,7 @@ A full-stack, polyglot personal finance tracking application engineered with **F
 
 ## 🚀 Getting Started
 
-### **Option 1: Launch with Docker Compose (Easiest)**
+### **Option 1: Launch with Docker Compose**
 ```bash
 docker compose up --build
 ```
