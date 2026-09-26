@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
-    "golang.org/x/crypto/bcrypt"
-	_ "modernc.org/sqlite"
+	_ "github.com/lib/pq" // Supabase PostgreSQL Driver
+	"golang.org/x/crypto/bcrypt"
 )
 
 // --- Models ---
@@ -22,12 +22,12 @@ type User struct {
 }
 
 type Transaction struct {
-	ID     string    `json:"id"`
-	UserID string    `json:"userId"`
-	Title  string    `json:"title"`
-	Amount float64   `json:"amount"`
-	Date   time.Time `json:"date"`
-	Category string `json:"category"`
+	ID       string    `json:"id"`
+	UserID   string    `json:"userId"`
+	Title    string    `json:"title"`
+	Amount   float64   `json:"amount"`
+	Date     time.Time `json:"date"`
+	Category string    `json:"category"`
 }
 
 type AuthRequest struct {
@@ -46,47 +46,18 @@ var db *sql.DB
 // --- Database Initialization ---
 
 func initDB() {
-	 var err error
-
-     // Automatically use Docker volume /app/db/finance.db if running inside Docker!
-     dbPath := "./finance.db"
-     if _, err := os.Stat("/app/db"); err == nil {
-     	dbPath = "/app/db/finance.db"
-     }
-
-     db, err = sql.Open("sqlite", dbPath)
-     if err != nil {
-     	log.Fatalf("Failed to open SQLite database: %v", err)
-     }
-
-	// Create Users Table
-	createUsersTable := `
-	CREATE TABLE IF NOT EXISTS users (
-		id TEXT PRIMARY KEY,
-		username TEXT UNIQUE NOT NULL,
-		password TEXT NOT NULL
-	);`
-	_, err = db.Exec(createUsersTable)
-	if err != nil {
-		log.Fatalf("Failed to create users table: %v", err)
+	var err error
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		log.Println("Warning: DATABASE_URL not set! Defaulting to local dev string if available.")
 	}
 
-	// Create Transactions Table
-	createTxsTable := `
-	CREATE TABLE IF NOT EXISTS transactions (
-		id TEXT PRIMARY KEY,
-		user_id TEXT NOT NULL,
-		title TEXT NOT NULL,
-		amount REAL NOT NULL,
-		date TEXT NOT NULL,
-		category TEXT DEFAULT 'Other'
-	);`
-	_, err = db.Exec(createTxsTable)
+	db, err = sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatalf("Failed to create transactions table: %v", err)
+		log.Fatalf("Failed to open Supabase Postgres connection: %v", err)
 	}
 
-	fmt.Println("Connected to SQLite database (finance.db)!")
+	fmt.Println("Connected to Supabase PostgreSQL database!")
 }
 
 // --- CORS Middleware ---
@@ -104,6 +75,22 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 
 		next(w, r)
 	}
+}
+
+// --- Health Handler (Wakes up Python backend) ---
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Automatically wake up Python backend when Go is pinged by Cron-Job!
+	if pythonURL := os.Getenv("PYTHON_BACKEND_URL"); pythonURL != "" {
+		client := &http.Client{Timeout: 4 * time.Second}
+		if resp, err := client.Get(pythonURL + "/api/analytics/health"); err == nil {
+			resp.Body.Close()
+		}
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"status": "alive"})
 }
 
 // --- Auth Handlers ---
@@ -125,16 +112,16 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if username exists in SQLite
+	// Check if username exists ($1 placeholder)
 	var existingID string
-	err := db.QueryRow("SELECT id FROM users WHERE username = ?", req.Username).Scan(&existingID)
+	err := db.QueryRow("SELECT id FROM users WHERE username = $1", req.Username).Scan(&existingID)
 	if err == nil {
 		w.WriteHeader(http.StatusConflict)
 		json.NewEncoder(w).Encode(AuthResponse{Message: "Username already exists"})
 		return
 	}
 
-	//hash password
+	// Hash password using bcrypt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
@@ -142,8 +129,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := fmt.Sprintf("u_%d", time.Now().UnixNano())
-	_, err = db.Exec("INSERT INTO users (id, username, password) VALUES (?, ?, ?)", userID, req.Username, string(hashedPassword))
-
+	_, err = db.Exec("INSERT INTO users (id, username, password) VALUES ($1, $2, $3)", userID, req.Username, string(hashedPassword))
 	if err != nil {
 		http.Error(w, "Failed to register user", http.StatusInternalServerError)
 		return
@@ -168,9 +154,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Query user from SQLite
 	var user User
-	err := db.QueryRow("SELECT id, username, password FROM users WHERE username = ?", req.Username).
+	err := db.QueryRow("SELECT id, username, password FROM users WHERE username = $1", req.Username).
 		Scan(&user.ID, &user.Username, &user.Password)
 
 	if err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)) != nil {
@@ -199,7 +184,7 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rows, err := db.Query("SELECT id, user_id, title, amount, date, category FROM transactions WHERE user_id = ?", userID)
+		rows, err := db.Query("SELECT id, user_id, title, amount, date, category FROM transactions WHERE user_id = $1", userID)
 		if err != nil {
 			http.Error(w, "Failed to query transactions", http.StatusInternalServerError)
 			return
@@ -244,9 +229,8 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 			tx.Category = "Other"
 		}
 
-		// Insert transaction into SQLite
 		_, err := db.Exec(
-			"INSERT INTO transactions (id, user_id, title, amount, date, category) VALUES (?, ?, ?, ?, ?, ?)",
+			"INSERT INTO transactions (id, user_id, title, amount, date, category) VALUES ($1, $2, $3, $4, $5, $6)",
 			tx.ID, tx.UserID, tx.Title, tx.Amount, tx.Date.Format(time.RFC3339), tx.Category,
 		)
 		if err != nil {
@@ -264,8 +248,7 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Delete transaction from SQLite
-		_, err := db.Exec("DELETE FROM transactions WHERE id = ?", txID)
+		_, err := db.Exec("DELETE FROM transactions WHERE id = $1", txID)
 		if err != nil {
 			http.Error(w, "Failed to delete transaction", http.StatusInternalServerError)
 			return
@@ -279,16 +262,10 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Initialize SQLite Database
 	initDB()
 	defer db.Close()
 
-	// Routes
-	http.HandleFunc("/api/health", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"message": "Go backend with SQLite is running!"})
-	}))
-
+	http.HandleFunc("/api/health", enableCORS(healthHandler))
 	http.HandleFunc("/api/register", enableCORS(registerHandler))
 	http.HandleFunc("/api/login", enableCORS(loginHandler))
 	http.HandleFunc("/api/transactions", enableCORS(transactionsHandler))
