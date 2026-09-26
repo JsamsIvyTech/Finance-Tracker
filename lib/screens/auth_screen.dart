@@ -48,7 +48,7 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } catch (error) {
       setState(() {
-        _errorMessage = 'Could not connect to Go backend server.';
+        _errorMessage = 'Connection Error: $error'; // Display real error message!
       });
     } finally {
       setState(() {

@@ -8,23 +8,23 @@ class ApiService {
   // Go REST Backend Cloud Base URL
   static String get baseUrl => 'https://finance-go-backend.onrender.com/api';
 
-  // Register user
+  // Register user with 40s timeout for cloud cold starts
   static Future<Map<String, dynamic>> register(String username, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/register'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'username': username, 'password': password}),
-    );
+    ).timeout(const Duration(seconds: 40));
     return jsonDecode(response.body);
   }
 
-  // Login user
+  // Login user with 40s timeout for cloud cold starts
   static Future<Map<String, dynamic>> login(String username, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'username': username, 'password': password}),
-    );
+    ).timeout(const Duration(seconds: 40));
     return jsonDecode(response.body);
   }
 
@@ -32,7 +32,7 @@ class ApiService {
   static Future<List<Transaction>> fetchTransactions(String userId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/transactions?userId=$userId'),
-    );
+    ).timeout(const Duration(seconds: 40));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -60,7 +60,7 @@ class ApiService {
         'date': date.toUtc().toIso8601String(),
         'category': category,
       }),
-    );
+    ).timeout(const Duration(seconds: 40));
 
     if (response.statusCode == 201) {
       return Transaction.fromJson(jsonDecode(response.body));
