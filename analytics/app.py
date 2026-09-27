@@ -118,6 +118,9 @@ def extract_date_from_text(text_lower):
 
     return now
 
+# Health Check Route Aliases
+@app.route('/', methods=['GET'])
+@app.route('/api/health', methods=['GET'])
 @app.route('/api/analytics/health', methods=['GET'])
 def health_check():
     return jsonify({"status": "Python Analytics Service is running!"})
