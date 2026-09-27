@@ -77,17 +77,19 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// --- Health Handler (Wakes up Python backend) ---
+// --- Health Handler (Wakes up Python backend asynchronously) ---
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Automatically wake up Python backend when Go is pinged by Cron-Job!
+	// Wake up Python backend in a background goroutine so Go responds INSTANTLY with 200 OK!
 	if pythonURL := os.Getenv("PYTHON_BACKEND_URL"); pythonURL != "" {
-		client := &http.Client{Timeout: 4 * time.Second}
-		if resp, err := client.Get(pythonURL + "/api/analytics/health"); err == nil {
-			resp.Body.Close()
-		}
+		go func(url string) {
+			client := &http.Client{Timeout: 30 * time.Second}
+			if resp, err := client.Get(url + "/api/analytics/health"); err == nil {
+				resp.Body.Close()
+			}
+		}(pythonURL)
 	}
 
 	json.NewEncoder(w).Encode(map[string]string{"status": "alive"})
