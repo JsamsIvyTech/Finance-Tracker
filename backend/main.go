@@ -57,6 +57,11 @@ func initDB() {
 		log.Fatalf("Failed to open Supabase Postgres connection: %v", err)
 	}
 
+	// Optimize connection pool limits for Render 512MB RAM & Supabase pooler
+	db.SetMaxOpenConns(5)
+	db.SetMaxIdleConns(2)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
 	fmt.Println("Connected to Supabase PostgreSQL database!")
 }
 
@@ -85,7 +90,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	// Wake up Python backend in a background goroutine so Go responds INSTANTLY with 200 OK!
 	if pythonURL := os.Getenv("PYTHON_BACKEND_URL"); pythonURL != "" {
 		go func(url string) {
-			client := &http.Client{Timeout: 30 * time.Second}
+			client := &http.Client{Timeout: 10 * time.Second}
 			if resp, err := client.Get(url + "/api/analytics/health"); err == nil {
 				resp.Body.Close()
 			}
