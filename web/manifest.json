@@ -1,11 +1,11 @@
 {
-    "name": "firstapp",
-    "short_name": "firstapp",
+    "name": "Finance Tracker",
+    "short_name": "Finance Tracker",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Finance Tracker - AI Personal Finance Platform",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
