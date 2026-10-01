@@ -1,12 +1,23 @@
 # 📊 Finance Tracker - Polyglot AI Personal Finance Platform
 
-A full-stack, polyglot personal finance tracking application engineered with **Flutter** (Mobile/Desktop UI), a high-performance **Go** REST API server, a **Python** AI & analytics microservice, **Supabase PostgreSQL** cloud persistence, and **Docker** container orchestration.
+A full-stack, polyglot personal finance tracking application engineered with **Flutter** (Mobile/Desktop/Web UI), a high-performance **Go** REST API server, a **Python** AI & analytics microservice, **Supabase PostgreSQL** cloud persistence, and **Docker** container orchestration.
+
+🌐 **Live Web Application**: **[https://JsamsIvyTech.github.io/Finance-Tracker/](https://JsamsIvyTech.github.io/Finance-Tracker/)**
 
 ![Flutter](https://img.shields.io/badge/Frontend-Flutter_3.22+-02569B?logo=flutter)
+![GitHub Pages](https://img.shields.io/badge/Web_Host-GitHub_Pages-222222?logo=github)
 ![Go](https://img.shields.io/badge/Backend-Go_1.22+-00ADD8?logo=go)
 ![Python](https://img.shields.io/badge/Analytics-Python_3.11+-3776AB?logo=python)
 ![Database](https://img.shields.io/badge/Database-Supabase_PostgreSQL-3ECF8E?logo=supabase)
 ![Docker](https://img.shields.io/badge/DevOps-Docker_Compose-2496ED?logo=docker)
+
+---
+
+## 🌐 Live Web App
+
+The application is deployed live on **GitHub Pages**! You can open and use the application directly in any web browser without installing anything:
+
+👉 **[https://JsamsIvyTech.github.io/Finance-Tracker/](https://JsamsIvyTech.github.io/Finance-Tracker/)**
 
 ---
 
@@ -22,7 +33,8 @@ A full-stack, polyglot personal finance tracking application engineered with **F
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────┐
-│                            FRONTEND (Flutter)                             │
+│                       FRONTEND (Flutter Mobile/Web)                       │
+│                         https://JsamsIvyTech.github.io                    │
 │                                                                           │
 │   [AuthScreen] ───> [Dashboard & SummaryCard] ───> [TransactionList]      │
 │                             │                                             │
@@ -36,6 +48,7 @@ A full-stack, polyglot personal finance tracking application engineered with **F
                               ▼
 ┌───────────────────────────────────────────────────────────────────────────┐
 │                             BACKEND (Go)                                  │
+│                 https://finance-go-backend.onrender.com                   │
 │                                                                           │
 │   [enableCORS Middleware] ───> [Route Handlers: /login, /transactions]    │
 │                                             │                             │
@@ -68,6 +81,7 @@ A full-stack, polyglot personal finance tracking application engineered with **F
 ## ✨ Key Features
 
 ### 📱 **Flutter Frontend (Cross-Platform UI)**
+- **Live Web & Mobile**: Deployed live on GitHub Pages and Android / Windows!
 - **Interactive Dashboard**: Total monthly expense summary card, transaction list, and formatted currency.
 - **Expense Categories & Icons**: Support for Food 🍔, Rent 🏠, Transport 🚗, Entertainment 🎮, Shopping 🛍️, Bills 💡, and Other 💲 with matching category icons.
 - **Pretty Date Formatting**: Integrated Flutter `intl` package (`DateFormat.yMMMd()`) for clean dates (e.g. `Sep 23, 2026`).
@@ -86,13 +100,13 @@ A full-stack, polyglot personal finance tracking application engineered with **F
 - **NLP Receipt Parser**: Regular expression & natural language date parser handling explicit dates, relative days (`"yesterday"`, `"3 days ago"`), and ordinal day phrases (`"17th of the month"`, `"first of the month"`).
 
 ### ⏰ **24/7 Keep-Alive Automation**
-- **Zero Cold Starts**: `cron-job.org` pings Go's `/api/health` every 15 minutes, automatically waking up the Python microservice so both servers stay 100% awake 24/7!
+- **Zero Cold Starts**: `cron-job.org` pings both the Go backend (`:8080`) and Python AI microservice (`:5000`) every **5 minutes**, ensuring both microservices stay 100% awake 24/7 with zero cold starts!
 
 ---
 
 ## 🛠️ API Reference
 
-### **Go Backend (`http://localhost:8080/api`)**
+### **Go Backend (`https://finance-go-backend.onrender.com/api`)**
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `GET` | `/health` | Server health check (Pings Python service) |
@@ -102,7 +116,7 @@ A full-stack, polyglot personal finance tracking application engineered with **F
 | `POST` | `/transactions` | Save new transaction to Supabase Postgres |
 | `DELETE` | `/transactions?id=...` | Delete transaction from Supabase Postgres |
 
-### **Python AI Microservice (`http://localhost:5000/api/analytics`)**
+### **Python AI Microservice (`https://finance-python-analytics.onrender.com/api/analytics`)**
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `GET` | `/health` | Analytics service health check |
@@ -114,7 +128,12 @@ A full-stack, polyglot personal finance tracking application engineered with **F
 
 ## 🚀 Getting Started
 
-### **Option 1: Launch with Docker Compose**
+### **Option 1: Open Live Web App (Instant)**
+Open **[https://JsamsIvyTech.github.io/Finance-Tracker/](https://JsamsIvyTech.github.io/Finance-Tracker/)** in any browser!
+
+---
+
+### **Option 2: Launch Locally with Docker Compose**
 ```bash
 docker compose up --build
 ```
@@ -122,42 +141,12 @@ This launches the Go REST API on `localhost:8080` and the Python AI microservice
 
 ---
 
-### **Option 2: Run Microservices Individually**
+## 📦 Production Release Builds
 
-#### **1. Start Go Backend**:
-```bash
-cd backend
-go run main.go
-```
-
-#### **2. Start Python AI Microservice**:
-```bash
-cd analytics
-pip install -r requirements.txt
-python app.py
-```
-
-#### **3. Start Flutter Frontend**:
-```bash
-flutter run
-```
-
----
-
-## 📦 Production Builds
-
-- **Windows Desktop Executable (`.exe`)**:
-  ```bash
-  flutter build windows
-  ```
-- **Android App Bundle for Google Play (`.aab`)**:
-  ```bash
-  flutter build appbundle --release
-  ```
-- **Android APK Package (`.apk`)**:
-  ```bash
-  flutter build apk --release
-  ```
+- **Web Live Application**: Hosted on GitHub Pages at `https://JsamsIvyTech.github.io/Finance-Tracker/`.
+- **Windows Desktop Executable (`.exe`)**: Compiled Flutter desktop bundle (`flutter build windows`).
+- **Android App Bundle for Google Play (`.aab`)**: Signed release bundle (`flutter build appbundle --release`).
+- **Android APK Package (`.apk`)**: Standalone Android package (`flutter build apk --release`).
 
 ---
 
