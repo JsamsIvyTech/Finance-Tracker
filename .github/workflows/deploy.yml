@@ -27,7 +27,7 @@ jobs:
           channel: 'stable'
 
       - name: Build Web App
-        run: flutter build web --base-href "/Finance-Tracker/"
+        run: flutter build web --web-renderer auto --base-href "/Finance-Tracker/"
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
