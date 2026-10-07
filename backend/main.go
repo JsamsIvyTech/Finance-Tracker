@@ -28,6 +28,7 @@ type Transaction struct {
 	Amount   float64   `json:"amount"`
 	Date     time.Time `json:"date"`
 	Category string    `json:"category"`
+	IsIncome bool      `json:"isIncome"`
 }
 
 type AuthRequest struct {
@@ -203,7 +204,7 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rows, err := db.Query("SELECT id, user_id, title, amount, date, category FROM transactions WHERE user_id = $1", userID)
+		rows, err := db.Query("SELECT id, user_id, title, amount, date, category, COALESCE(is_income, FALSE) FROM transactions WHERE user_id = $1", userID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Database query error: " + err.Error()})
@@ -215,7 +216,7 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 		for rows.Next() {
 			var tx Transaction
 			var dateStr string
-			if err := rows.Scan(&tx.ID, &tx.UserID, &tx.Title, &tx.Amount, &dateStr, &tx.Category); err != nil {
+			if err := rows.Scan(&tx.ID, &tx.UserID, &tx.Title, &tx.Amount, &dateStr, &tx.Category, &tx.IsIncome); err != nil {
 				continue
 			}
 			tx.Date, _ = time.Parse(time.RFC3339, dateStr)
@@ -252,8 +253,8 @@ func transactionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		_, err := db.Exec(
-			"INSERT INTO transactions (id, user_id, title, amount, date, category) VALUES ($1, $2, $3, $4, $5, $6)",
-			tx.ID, tx.UserID, tx.Title, tx.Amount, tx.Date.Format(time.RFC3339), tx.Category,
+			"INSERT INTO transactions (id, user_id, title, amount, date, category, is_income) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+			tx.ID, tx.UserID, tx.Title, tx.Amount, tx.Date.Format(time.RFC3339), tx.Category, tx.IsIncome,
 		)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

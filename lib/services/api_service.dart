@@ -42,13 +42,14 @@ class ApiService {
     }
   }
 
-  // Add new transaction to Go server
+  // Add new transaction to Go server (supports isIncome)
   static Future<Transaction> addTransaction(
       String userId,
       String title,
       double amount,
       DateTime date,
       String category,
+      [bool isIncome = false]
       ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/transactions'),
@@ -59,6 +60,7 @@ class ApiService {
         'amount': amount,
         'date': date.toUtc().toIso8601String(),
         'category': category,
+        'isIncome': isIncome,
       }),
     ).timeout(const Duration(seconds: 40));
 

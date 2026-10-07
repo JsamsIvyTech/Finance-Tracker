@@ -97,10 +97,6 @@ class _BasicPageState extends State<BasicPage> {
     }
   }
 
-  double get _totalSpending {
-    return _userTransactions.fold(0.0, (sum, item) => sum + item.amount);
-  }
-
   Future<void> _loadTransactions() async {
     if (_userId == null) return;
     if (mounted) {
@@ -144,11 +140,11 @@ class _BasicPageState extends State<BasicPage> {
     }
   }
 
-  void _addNewTransaction(String txTitle, double txAmount, DateTime chosenDate, String txCategory) async {
+  void _addNewTransaction(String txTitle, double txAmount, DateTime chosenDate, String txCategory, [bool isIncome = false]) async {
     if (_userId == null) return;
 
     try {
-      final newTx = await ApiService.addTransaction(_userId!, txTitle, txAmount, chosenDate, txCategory);
+      final newTx = await ApiService.addTransaction(_userId!, txTitle, txAmount, chosenDate, txCategory, isIncome);
       if (mounted) {
         setState(() {
           _userTransactions.add(newTx);
@@ -185,7 +181,7 @@ class _BasicPageState extends State<BasicPage> {
   void _startAddNewTransaction(BuildContext ctx) {
     showModalBottomSheet(
       context: ctx,
-      isScrollControlled: true, // <--- Allows modal sheet to expand above soft keyboard!
+      isScrollControlled: true,
       builder: (_) {
         return NewTransaction(addTx: _addNewTransaction);
       },
@@ -222,9 +218,9 @@ class _BasicPageState extends State<BasicPage> {
           : SingleChildScrollView(
               child: Column(
                 children: [
+                  // Pass full transactions list to calculate Earned Income vs Expenses & Net Remaining Budget!
                   SummaryCard(
-                    totalSpending: _totalSpending,
-                    transactionCount: _userTransactions.length,
+                    transactions: _userTransactions,
                   ),
                   PredictionCard(predictionData: _predictionData),
                   RecurringCard(analyticsData: _analyticsData),

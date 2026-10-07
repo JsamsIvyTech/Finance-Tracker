@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 
 class NewTransaction extends StatefulWidget {
-  final Function(String, double, DateTime, String) addTx;
+  final Function(String, double, DateTime, String, bool) addTx;
 
   const NewTransaction({super.key, required this.addTx});
 
@@ -17,8 +17,10 @@ class _NewTransactionState extends State<NewTransaction> {
   final _quickTextController = TextEditingController();
   DateTime? _selectedDate;
   bool _isParsing = false;
+  bool _isIncome = false; // false = Expense, true = Income
 
-  final List<String> _categories = [
+  // Expense Categories
+  final List<String> _expenseCategories = [
     'Food',
     'Rent',
     'Transport',
@@ -27,7 +29,19 @@ class _NewTransactionState extends State<NewTransaction> {
     'Bills',
     'Other'
   ];
+
+  // Income Categories
+  final List<String> _incomeCategories = [
+    'Salary',
+    'Gift',
+    'Side Gig',
+    'Investment',
+    'Other'
+  ];
+
   String _selectedCategory = 'Food';
+
+  List<String> get _currentCategories => _isIncome ? _incomeCategories : _expenseCategories;
 
   Future<void> _parseWithAI() async {
     final rawText = _quickTextController.text.trim();
@@ -47,7 +61,7 @@ class _NewTransactionState extends State<NewTransaction> {
         if (parsed['amount'] != null && parsed['amount'] > 0) {
           _amountController.text = parsed['amount'].toString();
         }
-        if (parsed['category'] != null && _categories.contains(parsed['category'])) {
+        if (parsed['category'] != null && _currentCategories.contains(parsed['category'])) {
           _selectedCategory = parsed['category'];
         }
         if (parsed['date'] != null) {
@@ -103,6 +117,7 @@ class _NewTransactionState extends State<NewTransaction> {
       enteredAmount,
       _selectedDate ?? DateTime.now(),
       _selectedCategory,
+      _isIncome, // Pass _isIncome boolean!
     );
 
     Navigator.of(context).pop();
@@ -123,6 +138,33 @@ class _NewTransactionState extends State<NewTransaction> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              // --- Expense vs Income Segmented Toggle ---
+              Center(
+                child: SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment<bool>(
+                      value: false,
+                      label: Text('Expense'),
+                      icon: Icon(Icons.arrow_downward, color: Colors.red),
+                    ),
+                    ButtonSegment<bool>(
+                      value: true,
+                      label: Text('Income'),
+                      icon: Icon(Icons.arrow_upward, color: Colors.green),
+                    ),
+                  ],
+                  selected: {_isIncome},
+                  onSelectionChanged: (newSelection) {
+                    setState(() {
+                      _isIncome = newSelection.first;
+                      // Switch default category when toggling Income vs Expense
+                      _selectedCategory = _isIncome ? 'Salary' : 'Food';
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 15),
+
               // --- AI Quick Fill Box ---
               Container(
                 padding: const EdgeInsets.all(12),
@@ -159,7 +201,7 @@ class _NewTransactionState extends State<NewTransaction> {
 
               // --- Manual / Parsed Fields ---
               TextField(
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: InputDecoration(labelText: _isIncome ? 'Income Source / Title' : 'Expense Title'),
                 controller: _titleController,
                 onSubmitted: (_) => _submitData(),
               ),
@@ -173,7 +215,7 @@ class _NewTransactionState extends State<NewTransaction> {
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'Category'),
-                items: _categories.map((cat) {
+                items: _currentCategories.map((cat) {
                   return DropdownMenuItem(
                     value: cat,
                     child: Text(cat),
@@ -209,7 +251,11 @@ class _NewTransactionState extends State<NewTransaction> {
               const SizedBox(height: 15),
               ElevatedButton(
                 onPressed: _submitData,
-                child: const Text('Add Transaction'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isIncome ? Colors.green : Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(_isIncome ? 'Add Income' : 'Add Expense'),
               ),
             ],
           ),

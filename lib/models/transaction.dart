@@ -4,6 +4,7 @@ class Transaction {
   final double amount;
   final DateTime date;
   final String category;
+  final bool isIncome;
 
   Transaction({
     required this.id,
@@ -11,6 +12,7 @@ class Transaction {
     required this.amount,
     required this.date,
     this.category = 'Other',
+    this.isIncome = false,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class Transaction {
         amount: (json['amount'] as num).toDouble(),
         date: DateTime.parse(json['date']),
         category: json['category'] ?? 'Other',
+        isIncome: json['isIncome'] ?? false,
     );
   }
 
@@ -31,6 +34,7 @@ class Transaction {
       'amount': amount,
       'date': date.toIso8601String(),
       'category': category,
+      'isIncome': isIncome,
     };
   }
 }
