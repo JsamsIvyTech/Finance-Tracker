@@ -81,9 +81,10 @@ The application is deployed live on **GitHub Pages**! You can open and use the a
 ## ✨ Key Features
 
 ### 📱 **Flutter Frontend (Cross-Platform UI)**
-- **Live Web & Mobile**: Deployed live on GitHub Pages and Android / Windows!
-- **Interactive Dashboard**: Total monthly expense summary card, transaction list, and formatted currency.
-- **Expense Categories & Icons**: Support for Food 🍔, Rent 🏠, Transport 🚗, Entertainment 🎮, Shopping 🛍️, Bills 💡, and Other 💲 with matching category icons.
+- **Live Web & Mobile**: Deployed live on GitHub Pages, Android (`.aab` v14), and Windows Desktop (`firstapp.exe`).
+- **💰 Monthly Income & Net Remaining Budget Card**: Displays Earned Income vs. Total Expenses, highlighting your Net Remaining Budget (Green if positive, Red if over budget!).
+- **Expense vs. Income Segmented Toggle**: Easily log paychecks, side gigs, or gifts as **Income** alongside **Expenses**.
+- **Dedicated Income & Expense Categories**: Support for Salary 💼, Gifts 🎁, Side Gigs 🚀, Investments 📈 alongside Food 🍔, Rent 🏠, Transport 🚗, Entertainment 🎮, Shopping 🛍️, and Bills 💡.
 - **Pretty Date Formatting**: Integrated Flutter `intl` package (`DateFormat.yMMMd()`) for clean dates (e.g. `Sep 23, 2026`).
 - **Auto-Login Session Persistence**: `SharedPreferences` saves your authenticated session locally so you stay logged in when re-opening the app.
 - **✨ AI Smart Quick-Fill**: Paste messy text or receipt strings (e.g. `"Starbucks coffee $5.75 yesterday"`) to auto-fill title, amount, category, and date instantly.
@@ -91,7 +92,7 @@ The application is deployed live on **GitHub Pages**! You can open and use the a
 ### ⚡ **Go REST API Server (`:8080`)**
 - **High-Performance Routing**: Built with Go `net/http` and CORS middleware.
 - **Enterprise Security**: Cryptographic password hashing and salting with `golang.org/x/crypto/bcrypt`.
-- **24/7 Cloud PostgreSQL Persistence**: Stores user accounts and transactions in Supabase Cloud Postgres using `github.com/lib/pq` driver.
+- **24/7 Cloud PostgreSQL Persistence**: Stores user accounts and transactions in Supabase Cloud Postgres using `github.com/lib/pq` driver with connection pooling.
 
 ### 🐍 **Python AI & Analytics Microservice (`:5000`)**
 - **Flask REST Microservice**: Runs on port `5000` with `flask-cors`.
@@ -113,7 +114,7 @@ The application is deployed live on **GitHub Pages**! You can open and use the a
 | `POST` | `/register` | User registration with `bcrypt` password hashing |
 | `POST` | `/login` | User authentication |
 | `GET` | `/transactions?userId=...` | Fetch user transactions from Supabase Postgres |
-| `POST` | `/transactions` | Save new transaction to Supabase Postgres |
+| `POST` | `/transactions` | Save new transaction to Supabase Postgres (Supports `isIncome`) |
 | `DELETE` | `/transactions?id=...` | Delete transaction from Supabase Postgres |
 
 ### **Python AI Microservice (`https://finance-python-analytics.onrender.com/api/analytics`)**
@@ -145,7 +146,7 @@ This launches the Go REST API on `localhost:8080` and the Python AI microservice
 
 - **Web Live Application**: Hosted on GitHub Pages at `https://JsamsIvyTech.github.io/Finance-Tracker/`.
 - **Windows Desktop Executable (`.exe`)**: Compiled Flutter desktop bundle (`flutter build windows`).
-- **Android App Bundle for Google Play (`.aab`)**: Signed release bundle (`flutter build appbundle --release`).
+- **Android App Bundle for Google Play (`.aab`)**: Signed release bundle v14 (`flutter build appbundle --release`).
 - **Android APK Package (`.apk`)**: Standalone Android package (`flutter build apk --release`).
 
 ---
